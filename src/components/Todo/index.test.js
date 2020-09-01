@@ -37,13 +37,15 @@ afterEach(function () {
   cleanup();
 });
 
-const container = render(<Todo />);
+it("should be in screen an initial message and an input with placeholder", async () => {
+  const container = render(<Todo />);
 
-const msgInitial = await waitForElement(() =>
-  container.getByText("Pesquise por algum usuário GitHub")
-);
+  const msgInitial = await waitForElement(() =>
+    container.getByText("Pesquise por algum usuário GitHub")
+  );
 
-const [inputNomeUsuario, searchButton] = await waitForElement(() => [
-  container.getByPlaceholderText("nome do usuário no github"),
-  container.getByTestId("searchButton"),
-]);
+  const [inputNomeUsuario, searchButton] = await waitForElement(() => [
+    container.getByPlaceholderText("nome do usuário no github"),
+    container.getByTestId("searchButton"),
+  ]);
+});
