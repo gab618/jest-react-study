@@ -7,30 +7,23 @@ function Todo() {
 
   const SearchBar = () => {
     function handleSubmit({ usuario }) {
-      Promise.all([
-        fetch(`https://api.github.com/users/${usuario}`),
-        fetch(`https://api.github.com/users/${usuario}/repos`),
-      ]).then(async (responses) => {
-        const [userResponse, reposReponse] = responses;
+      Promise.resolve(fetch(`https://api.github.com/users/${usuario}`)).then(
+        async (response) => {
+          const userResponse = response;
+          console.log(userResponse);
 
-        if (userResponse.status === 404) {
-          setData({ error: "User not found!" });
-          return;
+          if (userResponse.status === 404) {
+            setData({ error: "User not found!" });
+            return;
+          }
+
+          const user = await userResponse.json();
+
+          setData({
+            user,
+          });
         }
-
-        const user = await userResponse.json();
-        const repos = await reposReponse.json();
-
-        const shuffledSlicedRepos = repos
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 6);
-
-        setData({
-          user,
-          repos: shuffledSlicedRepos,
-        });
-      });
-      console.log(data);
+      );
     }
 
     const initialValues = { usuario: "" };
@@ -71,7 +64,7 @@ function Todo() {
     <>
       <Profile />
       <SearchBar />
-      <h1>
+      <h1 data-testid="userData">
         {data && data.user.login} - {data && data.user.name}
       </h1>
     </>

@@ -12,25 +12,14 @@ import {
 import "@testing-library/jest-dom/extend-expect";
 import Todo from "./index";
 
-nock("https://api.github.com")
-  .get("/users/gab618")
-  .delay(2000)
-  .reply(200, {
-    login: "jvvoliveira",
+nock("https://api.github.com").persist().get("/users/gab618").reply(
+  200,
+  {
+    login: "gab618",
     name: "Gabriel",
-    avatar_url: "https://avatars2.githubusercontent.com/u/24815192?v=4",
-    location: "São Paulo - Brazil",
-    bio: "prendendo a desenvolver coisas legais com javascript :D",
-    public_repos: 41,
-    followers: 7,
-    created_at: "2016-12-28T19:27:11Z",
-  })
-  .get("/users/gab618/repos?per_page=8&page=1")
-  .delay(2000)
-  .reply(500, {
-    message: "error",
-    status: 500,
-  });
+  },
+  { "Access-Control-Allow-Origin": "*" }
+);
 
 afterEach(function () {
   nock.cleanAll();
@@ -48,4 +37,26 @@ it("should be in screen an initial message and an input with placeholder", async
     container.getByPlaceholderText("nome do usuário no github"),
     container.getByTestId("searchButton"),
   ]);
+});
+
+it("should submit username and show user data", async () => {
+  const container = render(<Todo />);
+
+  const [inputNomeUsuario, searchButton] = await waitForElement(() => [
+    container.getByPlaceholderText("nome do usuário no github"),
+    container.getByTestId("searchButton"),
+  ]);
+
+  act(() => {
+    fireEvent.input(inputNomeUsuario, {
+      target: { value: "gab618" },
+    });
+
+    fireEvent.click(searchButton);
+  });
+
+  waitForDomChange(container).then(() => {
+    const userData = container.getByTestId("userData");
+    expect(userData.innerHTML).toEqual("gab618 - Gabriel");
+  });
 });
