@@ -1,46 +1,79 @@
 import React, { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 
 function Todo() {
-  const [task, setTask] = useState("");
-  const [tasks, setTasks] = useState([]);
+  const [data, setData] = useState();
+  const [usuario, setUsuario] = useState("");
 
-  const handleInputChange = (event) => {
-    setTask(event.target.value);
+  const SearchBar = () => {
+    function handleSubmit({ usuario }) {
+      Promise.all([
+        fetch(`https://api.github.com/users/${usuario}`),
+        fetch(`https://api.github.com/users/${usuario}/repos`),
+      ]).then(async (responses) => {
+        const [userResponse, reposReponse] = responses;
+
+        if (userResponse.status === 404) {
+          setData({ error: "User not found!" });
+          return;
+        }
+
+        const user = await userResponse.json();
+        const repos = await reposReponse.json();
+
+        const shuffledSlicedRepos = repos
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 6);
+
+        setData({
+          user,
+          repos: shuffledSlicedRepos,
+        });
+      });
+      console.log(data);
+    }
+
+    const initialValues = { usuario: "" };
+
+    return (
+      <div>
+        <Formik onSubmit={handleSubmit} initialValues={initialValues}>
+          <Form>
+            <div>
+              <Field
+                name="usuario"
+                data-testid="inputNomeUsuario"
+                type="text"
+                placeholder="nome do usuário no github"
+              />
+              <Field
+                data-testid="searchButton"
+                type="submit"
+                value="pesquisar"
+              />
+            </div>
+            <div>
+              <ErrorMessage component="span" name="usuario" />
+            </div>
+          </Form>
+        </Formik>
+      </div>
+    );
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (task.trim()) {
-      setTasks([...tasks, task]);
-      setTask("");
-    }
+  const Profile = () => {
+    return (
+      <h2 data-testid="messageInitial">Pesquise por algum usuário GitHub</h2>
+    );
   };
 
   return (
     <>
-      <form onSubmit={handleFormSubmit}>
-        <input
-          type="text"
-          onChange={handleInputChange}
-          value={task}
-          placeholder="Type a new task"
-        />
-        <button type="submit">Add new task</button>
-      </form>
-      <table>
-        <thead>
-          <tr>
-            <th>Task</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((t, index) => (
-            <tr key={index}>
-              <td>{t}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Profile />
+      <SearchBar />
+      <h1>
+        {data && data.user.login} - {data && data.user.name}
+      </h1>
     </>
   );
 }
